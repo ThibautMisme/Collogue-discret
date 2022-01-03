@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned int inv_mod(unsigned int x, unsigned int y)
+int inv_mod(int x,int y)
 {
 	// On s'inspire de la remontée des restes pour trouver les coefs de Bézout //
 	// r0 = q*r1 + r2 -> r2 = r0- q*q1 //
@@ -12,25 +12,11 @@ unsigned int inv_mod(unsigned int x, unsigned int y)
 
 	// création des variables: ci dessus a_k = tempx1, b_k = tempy1 //
 	// a_k+1 = tempx2, b_k+1 = tempy2 //
-	unsigned int tempx1, tempx2, tempy1, tempy2, tempor;
+	 int tempx1, tempx2, tempy1, tempy2, tempor;
 	div_t temp;
 
-	unsigned int r0 = y;
-	unsigned int r1 = x;
-
-	int sens;
-
-	// l'algorithme qui suit trouve toujours les coefs de bézout //
-	// /!\ mais il faut se rappeler si x<y ou pas //
-	if(x<y)
-	{
-		sens = 1;
-	}
-	
-	else
-	{
-		sens = 0;
-	}
+	int r0 = y;
+	int r1 = x;
 
 	tempx1=1; tempx2=0;
 	tempy1=0; tempy2=1;
@@ -54,51 +40,53 @@ unsigned int inv_mod(unsigned int x, unsigned int y)
 		tempy1=tempor;
 	}
 
-if(sens==1)
-{
-	printf("%d = %d * %d + %d * %d \n",r0, tempx1, x, tempy1, y );
-	return tempx1;
-}
 
-else
-{
-	printf("%d = %d * %d + %d * %d \n",r0, tempy1, x, tempx1, y );
+	// printf("%d = %d * %d + %d * %d \n",r0, tempx1, y, tempy1, x ); bout de code de vérification//
+
 	return tempy1;
-}
+
 
 }
 
 int main(int *argc,char **argv)
 {
 	// tableau contenant les valeurs de x mod(p_i^e_i) //
-	unsigned int tab1[] = {};
+	int tab1[] = {3,5,7};
 	// tableau conteant les facteurs premiers entre (ie: les p_i ^ e_i) //
-	unsigned int tab2[] = {};
+	int tab2[] = {4,9,25};
 	// on va recalculer p-1 (l'ordre du groupe) //
-	unsigned int M;
+	int M = 1;
 	// s est l'élément de Z/p-1Z tq s=tab1[i] mod(tab2[i]) //
-	unsigned int s;
+	int s = 0;
+
 
 	// tout est dans le nom: nombre de facteurs premiers distincts //
-	int nb_facteurs_premiers = (int) (sizeof(tab)/ sizeof(tab[0]));
+	int nb_facteurs_premiers = (int) (sizeof(tab1)/ sizeof(tab1[0]));
 
 
 	// calcul de "p-1" = M //
-	for(int k = 0, k<nb_facteurs_premiers,k++)
+	for(int k = 0; k < nb_facteurs_premiers ;k++)
 	{
 		M = M * tab2[k];
 	}
+
+	// printf("La valeur de p-1 est %d\n",M); bout de code de vérification //
 
 
 	// si x congru à x_i mod (p_i)^(e_i), alors x = \sum x_i * y_i * M_i mod(M) //
 	// avec y_i = (M_i)^-1 mod((p_i)^(e_i)) et M_i = M/((p_i)^(e_i)) //
 	// Le TRC quoi ... //
 
-	for(int i=0,i<nb_facteurs_premiers,i++)
+	for(int i=0 ;i<nb_facteurs_premiers ;i++)
 	{
-		s+=tab1[i]*inv_mod(M/tab2[i],tab2[i])*(M/tab2[i]);
+		s+=(tab1[i]*inv_mod(M/tab2[i],tab2[i])*(M/tab2[i]))%M;
 	}
 
-
-	return s
+	printf("On a bien que %d verifie les equations modulaires suivantes:\n", s);
+	for(int l = 0; l < nb_facteurs_premiers ;l++)
+	{
+		printf("%d = %d * %d + %d = %d mod(%d)\n",s,s/tab2[l],tab2[l],s%tab2[l],tab1[l],tab2[l]);
+	}
+	
+	return s;
 }
