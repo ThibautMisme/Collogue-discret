@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include<math.h>
-#include"Charles.h"
-#include"Camille.h"
+#include"theoreme_chinois.h"
+#include"b0Camille.h"
 #include"Thibaut.h"
 
 int* modification_tableau(int* pointeur)
-//cette fonction crée un tableau compatible avec les fonctions de Camille à partir du pointeur renvoyé par Thibaut.
+//cette fonction crée un tableau contenant les facteurs premiers de p-1 à partir du pointeur renvoyé par Thibaut.
 {
 	int *tableau;
 	tableau=(int*)calloc(11,sizeof(int)); //les fonctions de Camille ne marchent que pour des nombres qui ont moins de 10 facteurs premiers
@@ -37,16 +37,19 @@ int log_discret(int p,int alpha,int beta)
 		if ( *(facteur_q + i)!=0 )
 		{
 			rho=*(facteur_q + i); //attention la multiplicité de rho doit etre 1
-			b0=premier_coeffb0 (beta,p,rho,alpha);
-			*(pour_charles + i)=square_and_multiply(b0,alpha,rho); //= alpha^b0 [rho] (c'est une fonction dans Thibaut.h)
-			printf("b0 = %d\n,b0");
+			b0=premier_coeffb0 (alpha,beta,p,rho);
+			*(pour_charles + i)=b0%rho; 
+			printf("b0 = %d\n",b0%rho);
 		}
 	}
 	int a=1;
 	//c'est la puissance telle que alpha^a=beta
-	//a=theoreme_chinois(pour_charles,facteur_q,p); //c'est le nom de la fonction que Charles a codé (elle était en main, j'ai juste changé le nom)
-	//rq pour l'instant les faceteurs premiers entre eux, sont égaux aux facteurs premiers
+	a=theoreme_chinois(pour_charles,facteur_q,p); //c'est le nom de la fonction que Charles a codé (elle était en main, j'ai juste changé le nom)
+	//rq pour l'instant les facteurs premiers entre eux, sont égaux aux facteurs premiers
+	printf("a = %d\n",a);
 	return(a);
+	free(pour_charles);
+	free(facteur_q);
 }
 
 int main(int argc, char** argv)
@@ -57,6 +60,8 @@ int main(int argc, char** argv)
 	alpha=atoi(argv[2]);
 	int beta;
 	beta=atoi(argv[3]);
-	//printf("on a bien %d = %d \n",beta%p, square_and_multiply( log_discret(p,alpha,beta) , alpha , p ) );
-	return(log_discret(p,alpha,beta));
+	int log;
+	log=log_discret(p,alpha,beta);
+	printf("log discret = %d\n", log );
+	printf("on a bien %d = %d \n",beta%p, square_and_multiply( log , alpha , p ) );
 }
