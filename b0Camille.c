@@ -119,4 +119,28 @@ int premier_coeffb0 (int generateur, int beta,int p,int rho)
 	return b0;
 }
 
+int coef_bj(int rho, int beta, int generateur, int q)
+{
+	int new_b0;
+	int cpt=0;
+	int x=0;
 
+
+	while(q % square_and_multiply_rec(rho,cpt,q) == 0)
+	{	 
+
+		new_bj = premier_coeffb0(generateur,beta, p, rho);
+
+		x += new_bj * square_and_multiply_rec(rho,cpt,q);
+
+
+		// /!\ attention ici le square and multiply //
+		// se fait dans Z/pZ et non Z/(p-1)Z //
+		beta = beta * square_and_multiply_rec(inv_generateur,new_bo,p);
+
+		cpt++;
+
+	}
+
+	return x;
+} 
