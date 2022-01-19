@@ -37,7 +37,7 @@ int log_discret(int p,int alpha,int beta)
 		if ( *(facteur_q + i)!=0 )
 		{
 			rho=*(facteur_q + i); //attention la multiplicité de rho doit etre 1
-			b0=premier_coeffb0 (alpha,beta,p,rho);
+			b0=coef_bj (alpha,beta,p,rho);
 			*(pour_charles + i)=b0%rho; 
 			printf("b0 = %d\n",b0%rho);
 		}

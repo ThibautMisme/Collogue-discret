@@ -121,7 +121,7 @@ int premier_coeffb0 (int generateur, int beta,int p,int rho)
 
 int coef_bj(int rho, int beta, int generateur, int q)
 {
-	int new_b0;
+	int new_bj;
 	int cpt=0;
 	int x=0;
 
