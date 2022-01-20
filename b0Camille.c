@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<math.h>
-#include<theoreme_chinois.h>
+#include"theoreme_chinois.h"
 
 
 
@@ -126,10 +126,6 @@ int coef_bj(int rho, int beta, int generateur, int q)
 	int cpt=0;
 	int x=0;
 
-	int inv_generateur;
-
-	inv_generateur = inv_mod(generateur,q+1);
-
 
 	while(q % square_and_multiply_rec(rho,cpt,q) == 0)
 	{	 
@@ -141,7 +137,7 @@ int coef_bj(int rho, int beta, int generateur, int q)
 
 		// /!\ attention ici le square and multiply //
 		// se fait dans Z/pZ et non Z/(p-1)Z //
-		beta = beta * square_and_multiply_rec(inv_generateur,new_bj,p);
+		beta = beta * square_and_multiply_rec(inv_mod(generateur,q+1),new_bj,q+1);
 
 		cpt++;
 
