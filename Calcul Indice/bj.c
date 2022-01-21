@@ -59,7 +59,7 @@ int est_generateur (int *tableau, int candidat, int p)
 
 /*On suppose que le tableau contient les facteurs premiers de p-1 et qu'il se termine par au moins un zero.*/
 {
-	int drapeau=1
+	int drapeau=1;
 	int i;
 	int d;
 	int ordre_du_groupe; 

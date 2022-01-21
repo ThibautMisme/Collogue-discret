@@ -2,9 +2,13 @@
 #include<stdlib.h>
 #include"factorisation_v3.h"
 #include"theoreme_chinois.h"
+#include"bj.h"
 
 #define m 3
 
+
+
+//FONCTIONS PRATQIUES
 
 void afficher_tableau_classique(int a,int b,int tb[a][b],const char * nom)
 {
@@ -34,12 +38,32 @@ void afficher_liste_classique(int a,int *pt,const char * nom)
 	printf("\n");
 }
 
+void est_dans_factorisation(int y,int *liste,int *estdans_pt,int *position_pt)
+//comme est_dans mais dans le cas ou liste est une liste produite par la fonction factorisation
+//en plus: met 1 dans estdans si y est dans liste. Si oui, met dans position la position de y dans liste (cad y est le position-eme facteur plus grand).
+//demande des pointeurs car c'est passage par pointeur.
+{
+	int flag=0;
+	int j;
+	for(j=0;j<m;j++)
+	{
+		if (y==liste[2*j])
+		{
+			flag=1;
+			*position_pt=j;
+		}
+	}
+	*estdans_pt=flag;
+}
+
+
+
 
 
 
 // BASE ET RELATIONS BASE
 
-int* creation_base()
+int* creation_base(int p)
 //retourne pointeur vers liste des m premiers entiers premiers = {p1, ... ,p_m}, rangé dans l'ordre croissant.
 {
 	int *base;
@@ -50,8 +74,33 @@ int* creation_base()
 	{
 		if (est_premier(j,20)==1)
 		{
-			*(base + compteur)=j;
+			*(base + compteur)=j%p;
 			compteur++;
+		}
+		j++;
+	}
+	return(base);
+}
+
+int* creation_base_2(int p,int *fact)
+//retourne pointeur vers liste des m premiers entiers premiers = {p1, ... ,p_m}, rangé dans l'ordre croissant.
+{
+	int *base;
+	base=(int*)calloc(m,sizeof(int));
+	int j=2;
+	int compteur=0;
+	int estdans=0;
+	int position=0;
+	while (compteur<m)
+	{
+		if (est_premier(j,20)==1)
+		{
+			est_dans_factorisation(j,fact,&estdans,&position);
+			if (estdans==0)
+			{
+				*(base + compteur)=j%p;
+				compteur++;
+			}
 		}
 		j++;
 	}
@@ -80,23 +129,6 @@ int est_dans(int y,int *liste)
 	return(flag);
 }
 
-void est_dans_factorisation(int y,int *liste,int *estdans_pt,int *position_pt)
-//comme est_dans mais dans le cas ou liste est une liste produite par la fonction factorisation
-//en plus: met 1 dans estdans si y est dans liste. Si oui, met dans position la position de y dans liste (cad y est le position-eme facteur plus grand).
-//demande des pointeurs car c'est passage par pointeur.
-{
-	int flag=0;
-	int j;
-	for(j=0;j<m;j++)
-	{
-		if (y==liste[2*j])
-		{
-			flag=1;
-			*position_pt=j;
-		}
-	}
-	*estdans_pt=flag;
-}
 
 int base_friable(int *decomposition,int *base)
 //renvoie 1 si le nombre que decomposition représente est un produit des elements de la base
@@ -165,47 +197,47 @@ void creation_relation_base(int *base,int tab[(2*m)+1][m+1],int p,int alpha)
 
 //PARTIE PIVOT DE GAUSS
 
-void echanger_lignes(int tab[(2*m)+1][m+1],int a,int b,int decalage)
+void echanger_lignes(int tab[(2*m)+1][m+1],int a,int b,int decalagei,int decalagej)
 // echange la ligne a avec la ligne b de la matrice tab ou les decalege premières lignes et colonnes ne comptent pas
 {
 	int transition;
 	int k;
-	for(k=0;k<=(m-decalage);k++)
+	for(k=0;k<=(m-decalagej);k++)
 	{
-		transition=tab[decalage + a][decalage + k];
-		tab[decalage + a][decalage + k]=tab[decalage + b][decalage + k];
-		tab[decalage + b][decalage + k]=transition;
+		transition=tab[decalagei + a][decalagej + k];
+		tab[decalagei + a][decalagej + k]=tab[decalagei + b][decalagej + k];
+		tab[decalagei + b][decalagej + k]=transition;
 	}
 }
 
-void multiplication_ligne(int tab[(2*m)+1][m+1],int decalage,int i ,int lambda, int p)
+void multiplication_ligne(int tab[(2*m)+1][m+1],int decalagei,int decalagej,int i ,int lambda, int p)
 //multiplie toute la ligne par lambda, en ne comptant pas les decalage premières colonnes.
 {
 	int k;
-	for(k=0;k<=(m-decalage);k++)
+	for(k=0;k<=(m-decalagej);k++)
 	{
-		tab[i+decalage][k+decalage]=( ((lambda%p)*tab[i+decalage][k+decalage])%p + p)%p;
+		tab[i+decalagei][k+decalagej]=( ((lambda%p)*tab[i+decalagei][k+decalagej])%p + p)%p;
 	}
 }
 
-void operation_elementaire(int tab[(2*m)+1][m+1],int decalage,int j,int i, int lambda,int p)
-// Lj <- Lj - lambda*Li
+void operation_elementaire(int tab[(2*m)+1][m+1],int decalagei,int decalagej,int n,int i, int lambda,int p)
+// Ln <- Ln - lambda*Li
 {
 	int k;
-	for(k=0;k<=(m-decalage);k++)
+	for(k=0;k<=(m-decalagej);k++)
 	{
-		tab[decalage + j][decalage + k]=(( tab[decalage + j][decalage + k] - (((lambda%p)*tab[decalage + i][decalage + k])%p) )+p)%p;
+		tab[decalagei + n][decalagej+ k]=(( tab[decalagei + n][decalagej + k] - (((lambda%p)*tab[decalagei + i][decalagej + k])%p) )+p)%p;
 	}
 }
 
-int test_nul_colonne(int tab[(2*m)+1][m+1],int decalage,int j)
+int test_nul_colonne(int tab[(2*m)+1][m+1],int decalagei,int decalagej,int j)
 //renvoie 0 si la colonne j, en prenant en compte le decalage, est nulle, 1 sinon
 {
 	int drapeau=0;
 	int k;
-	for(k=0;k<=((2*m)-decalage);k++)
+	for(k=0;k<=((2*m)-decalagei);k++)
 	{
-		if (tab[k+decalage][j+decalage]!=0)
+		if (tab[k+decalagei][j+decalagej]!=0)
 			drapeau=1;
 	}
 	return(drapeau);
@@ -225,39 +257,46 @@ int test_nul_colonne(int tab[(2*m)+1][m+1],int decalage,int j)
 //}
 
 
-void premiere_colonne_non_nulle(int tab[(2*m)+1][m+1],int decalage)
+int premiere_colonne_non_nulle(int tab[(2*m)+1][m+1],int decalagei,int decalagej)
 //echange des colonnes jusqu'à ce que la première colonne soit non nulle
 //n'est pas utilie pour premier tour de pivot_Gauss_rec, mais l'est pour les suivants
+//{
+	//if (test_nul_colonne(tab,decalage,0)==0)
+	//{
+	//	printf("Pivot de Gauss est tombée sur une colonne vide\n");
+	//	printf("colonne qui pose probleme = %d\n",decalage);
+	//	afficher_tableau_classique((2*m)+1,m+1,tab,"tab");
+	//}
+//}
 {
-	if (test_nul_colonne(tab,decalage,0)==0)
-		printf("Pivot de Gauss est tombée sur une colonne vide");
+	int delt=0;
+	while(test_nul_colonne(tab,decalagei,decalagej + delt,0)==0)
+	{
+		delt++;
+	}
+	return(delt);
 }
 
-//	int colonne_pour_echange=1;
-//	while(test_nul_colonne(tab,decalage,0)==0)
-//	{
-//		echanger_colonne(tab,0,colonne_pour_echange,decalage);
-//		colonne_pour_echange++;
-//	}
 
-
-void premier_coeff_non_nul(int tab[(2*m)+1][m+1],int decalage)
+void premier_coeff_non_nul(int tab[(2*m)+1][m+1],int decalagei,int decalagej)
 //modifie tab en échangeant lignes entre elles pour que le coef a_1_1 soit non nul.
 {
 	int ligne_pour_echange=1;
-	while(tab[decalage+0][decalage+0]==0)
+	while ( (tab[decalagei+0][decalagej+0]==0) && (ligne_pour_echange<=(2*m)) )
 	{
-		echanger_lignes(tab,0,ligne_pour_echange,decalage);
+		echanger_lignes(tab,0,ligne_pour_echange,decalagei,decalagej);
 		ligne_pour_echange++;
 	}
+	if (ligne_pour_echange>(2*m))
+		printf("Pivot de Gauss a trouvé une colonne vide\n");
 }
 
-void etape3(int tab[(2*m)+1][m+1],int decalage,int p)
+void etape3(int tab[(2*m)+1][m+1],int decalagei,int decalagej,int p)
 {
-	int j;
-	for(j=1;j<=( (2*m) -decalage);j++)
+	int n;
+	for(n=1;n<=( (2*m) -decalagei);n++)
 	{
-		operation_elementaire(tab,decalage,j,0, tab[j+decalage][decalage] ,p);
+		operation_elementaire(tab,decalagei,decalagej,n,0, tab[n+decalagei][decalagej] ,p);
 	}
 }
 
@@ -274,19 +313,19 @@ void etape3(int tab[(2*m)+1][m+1],int decalage,int p)
 //	}
 //}
 
-int test_nul_matrice(int tab[(2*m)+1][m+1],int decalage)
+int test_nul_matrice(int tab[(2*m)+1][m+1],int decalagei,int decalagej)
 //renvoie 0 si la matrice décalée est la matrice nulle, 1 sinon
 {
-	if (decalage<(m-1))
+	if (decalagej<(m-1))
 	{
 		int drapeau=0;
 		int i;
 		int j;
-		for(i=1;i<=( (2*m) -decalage);i++)
+		for(i=1;i<=( (2*m) -decalagei);i++)
 		{
-			for(j=1;j<=(m-decalage);j++)
+			for(j=1;j<=(m-decalagej);j++)
 			{
-				if (tab[decalage +i][decalage +j]!=0)
+				if (tab[decalagei +i][decalagej +j]!=0)
 					drapeau=1;
 			}
 		}
@@ -300,15 +339,15 @@ int test_nul_matrice(int tab[(2*m)+1][m+1],int decalage)
 }
 
 
-void Pivot_Gauss_recurrence(int tab[(2*m)+1][m+1],int decalage,int p)
+void Pivot_Gauss_recurrence(int tab[(2*m)+1][m+1],int decalagei,int decalagej,int p,int *delta)
 {
-	premiere_colonne_non_nulle(tab,decalage);
-	premier_coeff_non_nul(tab,decalage);
-	multiplication_ligne(tab,decalage,0, (inv_mod(tab[decalage][decalage],p)+p)%p ,p);
-	etape3(tab,decalage,p);
+	*delta=premiere_colonne_non_nulle(tab,decalagei,decalagej);
+	premier_coeff_non_nul(tab,decalagei,decalagej + *delta);
+	multiplication_ligne(tab,decalagei,decalagej+ *delta,0, (inv_mod(tab[decalagei][decalagej + *delta],p)+p)%p ,p);
+	etape3(tab,decalagei,decalagej + *delta,p);
 	//printf("decalage = %d et test_nul_matrice = %d\n",decalage,test_nul_matrice(tab,decalage));
-	if (test_nul_matrice(tab,decalage)==1)
-		Pivot_Gauss_recurrence(tab,decalage+1,p);
+	if (test_nul_matrice(tab,decalagei,decalagej + *delta)==1)
+		Pivot_Gauss_recurrence(tab,decalagei+1,decalagej+1 + *delta,p,delta);
 }
 
 int test_nul_ligne(int tab[(2*m)+1][m+1],int i)
@@ -347,7 +386,7 @@ void derniere_etape(int tab[(2*m)+1][m+1],int p)
 			j=place_pivot(tab,i);
 			for(k=(i-1);k>=0;k--)
 			{
-				operation_elementaire(tab,0,k,i, tab[k][j] ,p);
+				operation_elementaire(tab,0,0,k,i, tab[k][j] ,p);
 			}
 		}
 	}
@@ -359,7 +398,8 @@ void Pivot_Gauss(int tab[(2*m)+1][m+1],int p)
 // ATTENTION: RQ: DANS TOUTE CETTE FONCTION ON COMMENCERA PAR COMPTER LES LIGNES PAR 0
 // ATTENTION: si on tombe sur colonne vide: sort segmentation fault
 {
-	Pivot_Gauss_recurrence(tab,0,p);
+	int delta=0;
+	Pivot_Gauss_recurrence(tab,0,0,p,&delta);
 	derniere_etape(tab,p);
 }
 
@@ -396,6 +436,22 @@ int* transformation_facteur(int *facteur_q,int taille)
 		output[k]=facteur_q[2*k];
 	}
 	return(output);
+}
+
+int verification_facteur_simple(int *fct)
+//vérifie que les facteurs premiers de q sont bien de multiplicités 1
+{
+	int drapeau=1;
+	int k=0;
+	while(fct[(2*k)]!=0)
+	{
+		if (fct[(2*k)+1]!=1)
+			drapeau=0;
+		k++;
+	}
+	if (drapeau==0)
+		printf("ATTENTION: p-1 N'A PAS UNE DECOMPOSITION EN FACTEURS SIMPLES\n");
+	return(drapeau);
 }
 
 int* preparation_log(int *taille,int q)
@@ -464,7 +520,8 @@ void preprocessing(int p, int alpha, int base[m][2])
 {
 	int tab[(2*m)+1][m+1];
 	int *prebase;
-	prebase=creation_base();
+	prebase=creation_base(p);
+	//prebase=creation_base_2(p,factorisation(p-1));
 	creation_relation_base(prebase,tab,p,alpha);
 	int *log;
 	log=log_base(tab,p);
@@ -503,22 +560,104 @@ void afficher_tableau(int tab[(2*m)+1][m+1],int i, int j,int decalage)
 }
 
 
+int p_convient(int *facteur,int p)
+//vérifie que p-1 n'a que des facteurs simples
+{
+	int drapeau=1;
+	int k=0;
+	while(facteur[2*k]!=0)
+	{
+		if (est_premier(p,20)==0)
+			drapeau=0;
+		if (facteur[(2*k)+1]!=1)
+			drapeau=0;
+		k++;
+	}
+	return(drapeau);
+}
 
+int bon_resultat(int p,int alpha,int base[m][2])
+{
+	int drapeau=1;
+	int k;
+	for(k=0;k<m;k++)
+	{
+		if( square_and_multiply(base[k][1],alpha,p) != (base[k][0]%p) )
+			drapeau=0;
+	}
+	return(drapeau);
+}
+
+void programme_test_preprocessing(int borneinf,int bornesup)
+//test que la fonction preprocessing marche entre tous les nombres adéquats entre borneinf et bornesup
+{
+	int compteur_nb_premier=0;
+	int compteur_algo_bon=0;
+	int base[m][2];
+	int p=borneinf;
+	int *facteur;
+	facteur=factorisation(p-1);
+	int alpha;
+	alpha=generateur(facteur,p);
+	while(p<bornesup)
+	{
+		if (p_convient(facteur,p)==1)
+		{
+			compteur_algo_bon++;
+			preprocessing(p,alpha,base);
+			if (bon_resultat(p,alpha,base)==1)
+				compteur_nb_premier++;
+		}
+		p++;
+		free(facteur);
+		facteur=factorisation(p-1);
+		alpha=generateur(facteur,p);
+	}
+	printf("compteur = %d = %d",compteur_nb_premier,compteur_algo_bon);
+	free(facteur);
+}
+
+void voir_test_coherent(int base[m][2],int alpha, int p)
+// test que les log retournés par preprocessing sont bien ceux de la base
+{
+	int k;
+	for(k=0;k<m;k++)
+	{
+		printf("%d ^ %d = %d = %d\n",alpha,base[k][1], square_and_multiply(base[k][1],alpha,p) ,base[k][0]);
+	}
+}
+
+void test_classique(int p)
+// test pour une valeur de preprocessing
+{
+	int base[m][2];
+	int *facteur_simple;
+	facteur_simple=factorisation(p-1);
+	int alpha;
+	alpha=generateur(facteur_simple,p);
+	printf("alpha = %d\n",alpha);
+	if (verification_facteur_simple(facteur_simple)==1)
+	{
+		preprocessing(p,alpha,base);
+		afficher_tableau_classique(m,2,base,"base");
+		voir_test_coherent(base,alpha,p);
+	}
+	free(facteur_simple);
+	printf("jusqu'ici tout va bien");
+}
 
 
 
 
 // SEGMENTATION FAULT: pourrait etre que Pivot de Gauss est tombé sur une colonne vide.
+// ATTENTION: p-1 doit n'avoir que des facteurs premiers simples.
+// ATTENTION: m doit etre petit par rapport à p.
 
 void main(int argc, char** argv)
 {
 	int p;
 	p=atoi(argv[1]);
-	int alpha;
-	alpha=atoi(argv[2]);
-	
-	int base[m][2];
-	preprocessing(p,alpha,base);
-	afficher_tableau_classique(m,2,base,"base");
-	printf("jusqu'ici tout va bien");
+	int q;
+	q=atoi(argv[2]);
+	programme_test_preprocessing(p,q);
 }
