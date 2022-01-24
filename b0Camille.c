@@ -125,19 +125,26 @@ int coef_bj(int rho, int beta, int generateur, int q)
 	int new_bj;
 	int cpt=0;
 	int x=0;
+	int rho_puissance = 1;
+
+
+	int inv_generateur = inv_mod(generateur,q+1);
 
 
 	while(q % square_and_multiply_rec(rho,cpt,q) == 0)
 	{	 
 
-		new_bj = premier_coeffb0(generateur,beta, q+1, rho);
+		//   bêta_{j} := beta_{j-1}*inv_gen^{b_j*rho^} 
+		//=> bêta_j^{(p-1)/(rho)^{j+1}} = (beta_{j-1}*inv_gen)^{(p-1)/(rho^{j+1})*b_j}
+		new_bj = premier_coeffb0(generateur,beta, p, rho*rho_puissance);
 
-		x += new_bj * square_and_multiply_rec(rho,cpt,q);
+		x = x + new_bj * rho_puissance;
 
+		rho_puissance = rho_puissance * rho;
 
 		// /!\ attention ici le square and multiply //
 		// se fait dans Z/pZ et non Z/(p-1)Z //
-		beta = beta * square_and_multiply_rec(inv_mod(generateur,q+1),new_bj,q+1);
+		beta = beta * square_and_multiply_rec(inv_generateur,new_bj*rho_puissance,q+1);
 
 		cpt++;
 
