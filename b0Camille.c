@@ -94,20 +94,27 @@ int generateur (int tableau[3], int p)
 }
 
 
-int premier_coeffb0 (int generateur, int beta,int p,int rho)
+int premier_coeffb0 (int beta,int p,int rho_puissance,int rho, int gamma)
  /*a ce stade, cette fonction calcule bo pour un certain facteur rho lorsque sa puissance dans la factorisation de p-1 est 1
  rho est un élémént de tableau car un diviseur de p-1*/
 {
-	int gamma;
+	//int gamma;
 	int gammapuissance;
 	int betapuissance;
 	int b0;
 	int i;
 	int imax;
+
 	imax=p+1;
 	i=1;
-	betapuissance=square_and_multiply_rec(beta,((p-1)/rho),p);
-	gamma=square_and_multiply_rec(generateur,((p-1)/rho),p);
+
+	// /!\ ATTENTION : ici on appelle rho_puissance ce qui vaut en réalité dans la fonction //
+	// coef_bj rho*rho_puissance !!!!!! //
+	betapuissance=square_and_multiply_rec(beta,((p-1)/rho_puissance),p);
+
+
+
+	//gamma=square_and_multiply_rec(generateur,((p-1)/rho),p);
 	gammapuissance=gamma;
 	while (((gammapuissance%p)!=betapuissance)&&(i<imax))
 	{
@@ -116,37 +123,36 @@ int premier_coeffb0 (int generateur, int beta,int p,int rho)
 		/*printf("%d\n",gamma);*/
 		i=i+1;
 	}
-	b0=i;
+
+
+	b0=i%rho;
 	return b0;
 }
 
-int coef_bj(int rho, int beta, int generateur, int q)
+int coef_bj(int rho, int beta, int generateur, int p)
 {
 	int new_bj;
-	int cpt=0;
 	int x=0;
 	int rho_puissance = 1;
 
+	int gamma;
+	gamma = square_and_multiply_rec(alpha,((p-1)/rho),p);
 
-	int inv_generateur = inv_mod(generateur,q+1);
+	int inv_generateur = inv_mod(generateur,p);
 
 
-	while(q % square_and_multiply_rec(rho,cpt,q) == 0)
+	while((p-1) % (rho*rho_puissance) == 0)
 	{	 
 
-		//   bêta_{j} := beta_{j-1}*inv_gen^{b_j*rho^} 
-		//=> bêta_j^{(p-1)/(rho)^{j+1}} = (beta_{j-1}*inv_gen)^{(p-1)/(rho^{j+1})*b_j}
-		new_bj = premier_coeffb0(generateur,beta, p, rho*rho_puissance);
+		// /!\ ATTENTION: premier_coeffb0 prend en argument le nombre rho*rho_puissance //
+		// qui sera stocké dans une variable locale dénommée rho_puissance //
+		new_bj = premier_coeffb0(beta, p, rho*rho_puissance,rho,gamma);
 
 		x = x + new_bj * rho_puissance;
 
+		beta = beta * square_and_multiply_rec(inv_generateur,new_bj*rho_puissance,p);
+
 		rho_puissance = rho_puissance * rho;
-
-		// /!\ attention ici le square and multiply //
-		// se fait dans Z/pZ et non Z/(p-1)Z //
-		beta = beta * square_and_multiply_rec(inv_generateur,new_bj*rho_puissance,q+1);
-
-		cpt++;
 
 	}
 
